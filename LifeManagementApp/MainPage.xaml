@@ -1,29 +1,64 @@
-﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="LifeManagementApp.MainPage"
-             Title="Simple Notes">
+﻿<ContentPage
+    x:Class="LifeManagementApp.MainPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:LifeManagementApp.ViewModels">
 
-    <VerticalStackLayout Padding="20" Spacing="15">
+    <!-- Bind this page to NotesViewModel -->
+    <ContentPage.BindingContext>
+        <vm:NotesViewModel />
+    </ContentPage.BindingContext>
 
-        <Label Text="Write your note:" 
-               FontAttributes="Bold"
-               FontSize="20"/>
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
 
-        <Editor x:Name="NoteEditor"
-                Placeholder="Type something..."
-                AutoSize="TextChanges"
-                HeightRequest="150"/>
+            <Label
+                Text="My Notes"
+                FontSize="24"
+                HorizontalOptions="Center" />
 
-        <Button Text="Save Note"
-                Clicked="OnSaveClicked"/>
+            <!-- Editor bound to NewNoteText in the ViewModel -->
+            <Editor
+                x:Name="NoteEditor"
+                HeightRequest="120"
+                Placeholder="Write your note here..."
+                Text="{Binding NewNoteText}" />
 
-        <Label Text="Saved Notes:"
-               FontAttributes="Bold"
-               FontSize="18"/>
+            <!-- Button bound to SaveCommand (from [RelayCommand] Save) -->
+            <Button
+                Text="Save"
+                Command="{Binding SaveCommand}" />
 
-        <ScrollView>
-            <VerticalStackLayout x:Name="NotesList" Spacing="10"/>
-        </ScrollView>
+            <!-- List of notes bound to Notes collection -->
+            <CollectionView
+                ItemsSource="{Binding Notes}"
+                Margin="0,20,0,0">
 
-    </VerticalStackLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame
+                            Padding="10"
+                            Margin="0,0,0,5"
+                            HasShadow="False"
+                            BorderColor="LightGray"
+                            BackgroundColor="LightYellow">
+                            <VerticalStackLayout>
+                                <Label
+                                    Text="{Binding Text}"
+                                    FontSize="16"
+                                    TextColor="Black"
+                                    LineBreakMode="WordWrap" />
+                                <Label
+                                    Text="{Binding CreatedAt, StringFormat='{}{0:G}'}"
+                                    FontSize="10"
+                                    TextColor="Gray" />
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
