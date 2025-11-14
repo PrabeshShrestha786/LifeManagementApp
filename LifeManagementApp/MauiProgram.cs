@@ -1,4 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Net.Http;
+using LifeManagementApp.Interfaces;
+using LifeManagementApp.Services;
+using LifeManagementApp.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace LifeManagementApp
 {
@@ -16,8 +20,18 @@ namespace LifeManagementApp
                 });
 
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
+
+            // One shared HttpClient instance for the whole app
+            builder.Services.AddSingleton<HttpClient>();
+
+            // Joke service that uses HttpClient
+            builder.Services.AddSingleton<IJokeService, JokeApiService>();
+
+            // Register ViewModel + MainPage for DI
+            builder.Services.AddSingleton<NotesViewModel>();
+            builder.Services.AddSingleton<MainPage>();
 
             return builder.Build();
         }
