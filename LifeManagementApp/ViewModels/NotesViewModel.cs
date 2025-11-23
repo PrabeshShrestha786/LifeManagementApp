@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,51 +12,62 @@ namespace LifeManagementApp.ViewModels;
 public partial class NotesViewModel : ObservableObject
 {
     private readonly IJokeService _jokeService;
+    private readonly INotesService _notesService;
 
-    // Joke of the day text
+    // Joke of the day
     [ObservableProperty]
     private string jokeOfTheDay = "Loading joke...";
 
-    // The text currently being typed in the editor
+    // Text from the Editor
     [ObservableProperty]
     private string newNoteText = string.Empty;
 
-    // List of saved notes
+    // Notes collection bound to UI
     [ObservableProperty]
     private ObservableCollection<Note> notes = new();
 
-    // Constructor with DI
-    public NotesViewModel(IJokeService jokeService)
+    public NotesViewModel(IJokeService jokeService, INotesService notesService)
     {
         _jokeService = jokeService;
+        _notesService = notesService;
     }
 
-    // Called from MainPage.OnAppearing
+    // Load joke + notes (called in MainPage.OnAppearing)
     public async Task InitializeAsync()
     {
+        // Joke of the day
         var jokes = await _jokeService.GetJokesAsync();
-        JokeOfTheDay = jokes.Count > 0
-            ? jokes[0].ToString()
-            : "No joke today 😢";
+        JokeOfTheDay = jokes.FirstOrDefault()?.ToString() ?? "No joke today 😢";
+
+        // Load notes from SQLite db
+        var allNotes = await _notesService.GetAllNotesAsync();
+        Notes.Clear();
+
+        foreach (var n in allNotes)
+            Notes.Add(n);
     }
 
-    // This becomes SaveCommand
+    // SAVE COMMAND (async)
     [RelayCommand]
-    private void Save()
+    private async Task Save()
     {
         var text = NewNoteText?.Trim();
         if (string.IsNullOrEmpty(text))
-        {
-            // Ignore empty notes
             return;
-        }
 
-        Notes.Add(new Note
+        var newNote = new Note
         {
             Text = text,
             CreatedAt = DateTime.Now
-        });
+        };
 
+        // Save to database
+        await _notesService.AddNoteAsync(newNote);
+
+        // Add to observable list (top of list)
+        Notes.Insert(0, newNote);
+
+        // Clear editor
         NewNoteText = string.Empty;
     }
 }
